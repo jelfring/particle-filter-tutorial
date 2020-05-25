@@ -26,9 +26,25 @@ class Visualizer:
         self.x_margin = 1
         self.y_margin = 1
         self.circle_radius_robot = 0.02  # 0.25
+        self.draw_particle_pose = draw_particle_pose
+        self.landmark_size = 6
         self.scale = 2  # meter / inch
         self.robot_arrow_length = 0.5 / self.scale
-        self.draw_particle_pose = draw_particle_pose
+
+    def update_robot_radius(self, robot_radius):
+        """
+        Set the radius that must be used for drawing the robot in the simulated world.
+        :param robot_radius:  new robot radius
+        """
+        self.circle_radius_robot = robot_radius
+        self.robot_arrow_length = robot_radius
+
+    def update_landmark_size(self, landmark_size):
+        """
+        Set the size that must be used for drawing the landmarks in the simulated world.
+        :param landmark_size:  new landmark size
+        """
+        self.landmark_size = landmark_size
 
     def draw_world(self, world, robot, particles, hold_on=False, particle_color='g'):
         """
@@ -70,7 +86,7 @@ class Visualizer:
 
         # Add landmarks
         landmarks = np.array(world.landmarks)
-        plt.plot(landmarks[:, 0], landmarks[:, 1], 'bs', linewidth=2, markersize=6)
+        plt.plot(landmarks[:, 0], landmarks[:, 1], 'bs', linewidth=2, markersize=self.landmark_size)
 
         # Add particles
         if self.draw_particle_pose:
@@ -106,7 +122,7 @@ class Visualizer:
         plt.figure(fig_num)
 
         # Draw circle at given position (higher 'zorder' value means draw later, hence on top of other lines)
-        circle = plt.Circle((x, y), radius, facecolor=color, edgecolor=color, alpha=0.5, zorder=20)
+        circle = plt.Circle((x, y), radius, facecolor=color, edgecolor=color, alpha=0.4, zorder=20)
         plt.gca().add_patch(circle)
 
         # Draw line indicating heading
