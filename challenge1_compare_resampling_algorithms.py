@@ -79,7 +79,7 @@ if __name__ == '__main__':
     errors_res = []
     for trial in range(n_trials):
         print("Trial: ", trial)
-        # Initialize SIR particle filter: resample every time step
+        # Multinomial resampling
         particle_filter_multinomial = ParticleFilterSIR(
             number_of_particles=number_of_particles,
             limits=pf_state_limits,
@@ -88,7 +88,7 @@ if __name__ == '__main__':
             resampling_algorithm=ResamplingAlgorithms.MULTINOMIAL)
         particle_filter_multinomial.initialize_particles_uniform()
 
-        # Resample if approximate number effective particle drops below n_particles / 4
+        # Systematic resampling
         particle_filter_systematic = ParticleFilterSIR(
             number_of_particles=number_of_particles,
             limits=pf_state_limits,
@@ -97,7 +97,7 @@ if __name__ == '__main__':
             resampling_algorithm=ResamplingAlgorithms.SYSTEMATIC)
         particle_filter_systematic.set_particles(particle_filter_multinomial.particles)
 
-        # Resample based on reciprocal of maximum particle weight drops below 1 / 0.005
+        # Stratified resampling
         particle_filter_stratified = ParticleFilterSIR(
             number_of_particles=number_of_particles,
             limits=pf_state_limits,
@@ -106,7 +106,7 @@ if __name__ == '__main__':
             resampling_algorithm=ResamplingAlgorithms.STRATIFIED)
         particle_filter_stratified.set_particles(particle_filter_multinomial.particles)
 
-        # Resample based on reciprocal of maximum particle weight drops below 1 / 0.005
+        # Residual resampling
         particle_filter_residual = ParticleFilterSIR(
             number_of_particles=number_of_particles,
             limits=pf_state_limits,
