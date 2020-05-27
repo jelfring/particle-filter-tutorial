@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Custom objects that must be visualized
-from world import World
-from robot import Robot
+from .world import World
+from .robot import Robot
 
 
 class Visualizer:

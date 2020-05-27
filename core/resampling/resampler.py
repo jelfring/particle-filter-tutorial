@@ -10,7 +10,7 @@ from enum import Enum
 import copy
 
 # Helper functions
-from resampling_helpers import *
+from .resampling_helpers import *
 
 
 class ResamplingAlgorithms(Enum):

@@ -1,6 +1,6 @@
 import numpy as np
 
-from world import *
+from .world import *
 
 
 class Robot:

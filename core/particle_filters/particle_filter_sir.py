@@ -1,4 +1,4 @@
-from particle_filter_base import ParticleFilter
+from .particle_filter_base import ParticleFilter
 from core.resampling.resampler import Resampler
 
 
@@ -71,4 +71,3 @@ class ParticleFilterSIR(ParticleFilter):
         # Resample if needed
         if self.needs_resampling():
             self.particles = self.resampler.resample(self.particles, self.n_particles, self.resampling_algorithm)
-

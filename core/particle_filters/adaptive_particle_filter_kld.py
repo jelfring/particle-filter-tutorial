@@ -1,6 +1,6 @@
 import numpy as np
 
-from particle_filter_base import ParticleFilter
+from .particle_filter_base import ParticleFilter
 
 from core.resampling import generate_sample_index, compute_required_number_of_particles_KLD
 

@@ -1,4 +1,4 @@
-from particle_filter_base import ParticleFilter
+from .particle_filter_base import ParticleFilter
 from core.resampling import generate_sample_index
 
 
