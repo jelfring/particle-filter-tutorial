@@ -1,4 +1,4 @@
-from particle_filter_base import ParticleFilter
+from .particle_filter_base import ParticleFilter
 from core.resampling import cumulative_sum, binary_search
 
 import numpy as np
