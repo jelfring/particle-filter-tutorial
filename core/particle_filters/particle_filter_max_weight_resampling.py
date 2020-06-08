@@ -1,4 +1,4 @@
-from particle_filter_sir import ParticleFilterSIR
+from .particle_filter_sir import ParticleFilterSIR
 
 
 class ParticleFilterMWR(ParticleFilterSIR):
@@ -53,5 +53,3 @@ class ParticleFilterMWR(ParticleFilterSIR):
 
         # print("Reciprocal of max_weight {} is {}".format(max_weight, 1.0 / max_weight))
         return 1.0 / max_weight < self.resampling_threshold
-
-
