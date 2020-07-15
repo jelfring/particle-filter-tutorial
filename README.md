@@ -10,7 +10,7 @@ $ pip install <packagename>
 ```
 
 # Running the example
-Run the demo script to run a particle filter for robot localization in the simulated world.
+To run a particle filter for robot localization in the simulated world, run the demo script `demo_running_example.py` directly in your IDE or use the command line command below.
 
 In Windows:
 ```sh
@@ -22,5 +22,9 @@ In Linux:
 $ python3 demo_running_example.py
 ```
 
-The simulation will run and the visualization shows the simulated world with the landmarks, the real robot position and orientation and the particles of the particle filter.
+The simulation will run and the visualization below should appear.
 
+![alt text](https://github.com/jelfring/particle_filter_tutorial/blob/master/images/running_example_screenshot.png?raw=true)
+
+
+The picture shows a top view of a 2D simulated world. Four landmarks can be observed by the robot (blue rectangles). The landmark positions are given in the map and therefore are used to estimate the tru robot position and orientation (red circle). The particles that together represent the posterior distribution are represented by the green dots.
