@@ -1,168 +1,65 @@
 #!/usr/bin/env python
 
-# Simulation + plotting requires a robot, visualizer and world
-from simulator import Robot, Visualizer, World
+# Supported resampling methods
+from core.resampling import Resampler, ResamplingAlgorithms
 
-# Supported resampling methods (resampling algorithm enum for SIR and SIR-derived particle filters)
-from core.resampling import ResamplingAlgorithms
-
-# Particle filters
-from core.particle_filters import ParticleFilterSIR
-
-# For computing errors
 import numpy as np
+
+
+def get_states(weighted_samples):
+    """
+    Get the states from set of weighted particles.
+
+    :param weighted_samples: list of weighted particles
+    :return: list of particle states without weights
+    """
+    return [ws[1] for ws in weighted_samples]
+
 
 if __name__ == '__main__':
 
     print("Compare four resampling algorithms.")
 
-    ##
-    # Set simulated world and visualization properties
-    ##
-    world = World(10.0, 10.0, [[2.0, 2.0], [2.0, 8.0], [9.0, 2.0], [8, 9]])
+    # Number of particles
+    number_of_particles = 5
 
-    # Number of simulated time steps
-    n_time_steps = 50
+    # Weights
+    # normalized_weights = number_of_particles * [1.0 / number_of_particles]
+    unnormalized_weights = np.random.random_sample((number_of_particles,))
+    normalized_weights = [w / np.sum(unnormalized_weights) for w in unnormalized_weights]
 
-    ##
-    # True robot properties (simulator settings)
-    ##
+    # States
+    particle_states = range(1, number_of_particles+1)
 
-    # Setpoint (desired) motion robot
-    robot_setpoint_motion_forward = 0.25
-    robot_setpoint_motion_turn = 0.02
+    # Weighted samples
+    weighted_particles = zip(normalized_weights, particle_states)
 
-    # True simulated robot motion is set point plus additive zero mean Gaussian noise with these standard deviation
-    true_robot_motion_forward_std = 0.005
-    true_robot_motion_turn_std = 0.002
+    # Resampling algorithms that must be compared
+    resampler = Resampler()
+    methods = [ResamplingAlgorithms.MULTINOMIAL,
+               ResamplingAlgorithms.RESIDUAL,
+               ResamplingAlgorithms.STRATIFIED,
+               ResamplingAlgorithms.SYSTEMATIC]
 
-    # Robot measurements are corrupted by measurement noise
-    true_robot_meas_noise_distance_std = 0.2
-    true_robot_meas_noise_angle_std = 0.05
+    # Number of resample steps
+    num_steps = 100000
 
-    # Initialize simulated robot
-    robot = Robot(x=world.x_max * 0.75,
-                  y=world.y_max / 5.0,
-                  theta=3.14 / 2.0,
-                  std_forward=true_robot_motion_forward_std,
-                  std_turn=true_robot_motion_turn_std,
-                  std_meas_distance=true_robot_meas_noise_distance_std,
-                  std_meas_angle=true_robot_meas_noise_angle_std)
+    print('Input samples: {}'.format(weighted_particles))
 
-    ##
-    # Particle filter settings
-    ##
+    # Compare resampling algorithms
+    for method in methods:
+        print('Testing {} resampling'.format(method.name))
+        all_results = []
+        for i in range(0, num_steps+1):
+            # Resample
+            weighted_samples = resampler.resample(weighted_particles,
+                                                  number_of_particles,
+                                                  method)
 
-    number_of_particles = 1000
-    pf_state_limits = [0, world.x_max, 0, world.y_max]
+            # Store number of occurrences each particle in array
+            sampled_states = [state[1] for state in weighted_samples]
+            all_results.append([sampled_states.count(state_i) for state_i in particle_states])
 
-    # Process model noise (zero mean additive Gaussian noise)
-    motion_model_forward_std = 0.10
-    motion_model_turn_std = 0.02
-    process_noise = [motion_model_forward_std, motion_model_turn_std]
-
-    # Measurement noise (zero mean additive Gaussian noise)
-    meas_model_distance_std = 0.4
-    meas_model_angle_std = 0.3
-    measurement_noise = [meas_model_distance_std, meas_model_angle_std]
-
-    # Set resampling algorithm used
-    algorithm = ResamplingAlgorithms.MULTINOMIAL
-
-    ##
-    # Start simulation
-    ##
-    n_trials = 100
-    errors_mult = []
-    errors_sys = []
-    errors_str = []
-    errors_res = []
-    for trial in range(n_trials):
-        print("Trial: ", trial)
-        # Multinomial resampling
-        particle_filter_multinomial = ParticleFilterSIR(
-            number_of_particles=number_of_particles,
-            limits=pf_state_limits,
-            process_noise=process_noise,
-            measurement_noise=measurement_noise,
-            resampling_algorithm=ResamplingAlgorithms.MULTINOMIAL)
-        particle_filter_multinomial.initialize_particles_uniform()
-
-        # Systematic resampling
-        particle_filter_systematic = ParticleFilterSIR(
-            number_of_particles=number_of_particles,
-            limits=pf_state_limits,
-            process_noise=process_noise,
-            measurement_noise=measurement_noise,
-            resampling_algorithm=ResamplingAlgorithms.SYSTEMATIC)
-        particle_filter_systematic.set_particles(particle_filter_multinomial.particles)
-
-        # Stratified resampling
-        particle_filter_stratified = ParticleFilterSIR(
-            number_of_particles=number_of_particles,
-            limits=pf_state_limits,
-            process_noise=process_noise,
-            measurement_noise=measurement_noise,
-            resampling_algorithm=ResamplingAlgorithms.STRATIFIED)
-        particle_filter_stratified.set_particles(particle_filter_multinomial.particles)
-
-        # Residual resampling
-        particle_filter_residual = ParticleFilterSIR(
-            number_of_particles=number_of_particles,
-            limits=pf_state_limits,
-            process_noise=process_noise,
-            measurement_noise=measurement_noise,
-            resampling_algorithm=ResamplingAlgorithms.RESIDUAL)
-        particle_filter_residual.set_particles(particle_filter_multinomial.particles)
-
-        for i in range(n_time_steps):
-
-            # Simulate robot motion (required motion will not exactly be achieved)
-            robot.move(desired_distance=robot_setpoint_motion_forward,
-                       desired_rotation=robot_setpoint_motion_turn,
-                       world=world)
-
-            # Simulate measurement
-            measurements = robot.measure(world)
-
-            # Multinomial resampling PF
-            particle_filter_multinomial.update(robot_forward_motion=robot_setpoint_motion_forward,
-                                               robot_angular_motion=robot_setpoint_motion_turn,
-                                               measurements=measurements,
-                                               landmarks=world.landmarks)
-
-            # Systematic resampling PF
-            particle_filter_systematic.update(robot_forward_motion=robot_setpoint_motion_forward,
-                                              robot_angular_motion=robot_setpoint_motion_turn,
-                                              measurements=measurements,
-                                              landmarks=world.landmarks)
-
-            # Stratified resampling PF
-            particle_filter_stratified.update(robot_forward_motion=robot_setpoint_motion_forward,
-                                              robot_angular_motion=robot_setpoint_motion_turn,
-                                              measurements=measurements,
-                                              landmarks=world.landmarks)
-
-            # Residual resampling PF
-            particle_filter_residual.update(robot_forward_motion=robot_setpoint_motion_forward,
-                                            robot_angular_motion=robot_setpoint_motion_turn,
-                                            measurements=measurements,
-                                            landmarks=world.landmarks)
-
-
-            # Compute errors
-            robot_pose = np.array([robot.x, robot.y, robot.theta])
-            e_mult = robot_pose - np.asarray(particle_filter_multinomial.get_average_state())
-            e_sys = robot_pose - np.asarray(particle_filter_systematic.get_average_state())
-            e_str = robot_pose - np.asarray(particle_filter_stratified.get_average_state())
-            e_res = robot_pose - np.asarray(particle_filter_residual.get_average_state())
-
-            errors_mult.append(np.linalg.norm(e_mult))
-            errors_sys.append(np.linalg.norm(e_sys))
-            errors_str.append(np.linalg.norm(e_str))
-            errors_res.append(np.linalg.norm(e_res))
-
-    print("Multinomial mean error: {}, std error: {}".format(np.mean(np.asarray(errors_mult)), np.std(np.asarray(errors_mult))))
-    print("Systematic mean error: {}, std error: {}".format(np.mean(np.asarray(errors_sys)), np.std(np.asarray(errors_sys))))
-    print("Stratified mean error: {}, std error: {}".format(np.mean(np.asarray(errors_str)), np.std(np.asarray(errors_str))))
-    print("Residual mean error: {}, std error: {}".format(np.mean(np.asarray(errors_res)), np.std(np.asarray(errors_res))))
+        # Print results for current resampling algorithm
+        print('mean #occurrences: {}'.format(np.mean(all_results, axis=0)))
+        print('std  #occurrences: {}'.format(np.std(all_results, axis=0)))

@@ -47,10 +47,10 @@ def binary_search(cumulativeList, lower, upper, x):
     """
 
     # Validate input data
-    if upper >= lower and len(cumulativeList) > 0:
+    if upper > lower and len(cumulativeList) > 0:
 
         # Find middle point index
-        mid = round(lower + (upper - lower) / 2)
+        mid = int(round(lower + (upper - lower) / 2.0))
 
         # If middle element is first element above x (or equal)
         if cumulativeList[mid - 1] < x <= cumulativeList[mid]:
@@ -61,6 +61,9 @@ def binary_search(cumulativeList, lower, upper, x):
         else:
             # Middle below x, must be in right subarray
             return binary_search(cumulativeList, mid + 1, upper, x)
+    elif upper is lower and len(cumulativeList) > 0:
+        # Trivial case
+        return upper
     else:
         # Invalidate input
         return -1

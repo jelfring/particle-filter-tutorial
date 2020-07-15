@@ -102,6 +102,8 @@ class Visualizer:
         # Add robot pose
         self.add_pose2d(robot.x, robot.y, robot.theta, 1, 'r', self.circle_radius_robot)
 
+        plt.savefig('multimodal_one_landmark.png')
+
         # Show
         plt.pause(0.05)
 
