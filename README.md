@@ -3,6 +3,7 @@ All code is written in Python. In order to run the code, the following packages 
 
 * numpy 
 * matplotlib
+* scipy
 
 Installing these packages can be done using:
 ```sh

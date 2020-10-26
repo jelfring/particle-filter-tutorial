@@ -51,6 +51,4 @@ class ParticleFilterNEPR(ParticleFilterSIR):
         for par in self.particles:
             sum_weights_squared += par[0] * par[0]
 
-        # print("Approximate number of effective particles: {}, threshold: {}".format(1.0 / sum_weights_squared,
-        #                                                                             self.resampling_threshold))
         return 1.0 / sum_weights_squared < self.resampling_threshold

@@ -60,7 +60,7 @@ class ParticleFilterSIR(ParticleFilter):
             propagated_state = self.propagate_sample(par[1], robot_forward_motion, robot_angular_motion)
 
             # Compute current particle's weight
-            weight = par[0] * self.compute_importance_weight(propagated_state, measurements,  landmarks)
+            weight = par[0] * self.compute_likelihood(propagated_state, measurements, landmarks)
 
             # Store
             new_particles.append([weight, propagated_state])

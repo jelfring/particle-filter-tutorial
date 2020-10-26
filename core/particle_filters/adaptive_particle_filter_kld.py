@@ -2,7 +2,8 @@ import numpy as np
 
 from .particle_filter_base import ParticleFilter
 
-from core.resampling import generate_sample_index, compute_required_number_of_particles_KLD
+from core.resampling import generate_sample_index, compute_required_number_of_particles_kld
+
 
 class AdaptiveParticleFilterKld(ParticleFilter):
     """
@@ -34,7 +35,7 @@ class AdaptiveParticleFilterKld(ParticleFilter):
         :param measurement_noise: Measurement noise parameters (standard deviations): [std_range, std_angle].
         :param resolutions: Resolution of 3D-histogram used to approximate the true posterior distribution
         (x, y, theta).
-        :param epsilon: Maximimum allowed distance (error) between true and estimated distribution when computing number
+        :param epsilon: Maximum allowed distance (error) between true and estimated distribution when computing number
         of required particles.
         :param upper_quantile: Upper standard normal distribution quantile for (1-delta) where delta is the probability.
         that the error on the estimated distribution will be less than epsilon.
@@ -83,7 +84,7 @@ class AdaptiveParticleFilterKld(ParticleFilter):
                                                    robot_angular_motion)
 
             # Compute the weight that this propagated state would get with the current measurement
-            importance_weight = self.compute_importance_weight(propaged_state, measurements, landmarks)
+            importance_weight = self.compute_likelihood(propaged_state, measurements, landmarks)
 
             # Add weighted particle to new particle set
             new_particles.append([importance_weight, propaged_state])
@@ -106,7 +107,7 @@ class AdaptiveParticleFilterKld(ParticleFilter):
 
             # Update number of required particles (only defined if number of bins with support above 1)
             if number_of_bins_with_support > 1:
-                number_of_required_particles = compute_required_number_of_particles_KLD(number_of_bins_with_support,
+                number_of_required_particles = compute_required_number_of_particles_kld(number_of_bins_with_support,
                                                                                         self.epsilon,
                                                                                         self.upper_quantile)
 
@@ -116,5 +117,3 @@ class AdaptiveParticleFilterKld(ParticleFilter):
 
         # Store new particle set and normalize weights
         self.particles = self.normalize_weights(new_particles)
-
-        # print("Number of particles after KLD sampling is {}".format(len(self.particles)))

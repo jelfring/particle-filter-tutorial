@@ -68,7 +68,7 @@ class AdaptiveParticleFilterSl(ParticleFilter):
                                                    robot_angular_motion)
 
             # Compute the weight that this propagated state would get with the current measurement
-            importance_weight = self.compute_importance_weight(propaged_state, measurements, landmarks)
+            importance_weight = self.compute_likelihood(propaged_state, measurements, landmarks)
 
             # Add weighted particle to new particle set
             new_particles.append([importance_weight, propaged_state])
@@ -79,5 +79,3 @@ class AdaptiveParticleFilterSl(ParticleFilter):
 
         # Store new particle set and normalize weights
         self.particles = self.normalize_weights(new_particles)
-
-        # print("Number of particles after SL sampling is {}".format(len(self.particles)))

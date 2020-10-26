@@ -14,7 +14,7 @@ class ParticleFilter:
 
     def __init__(self, number_of_particles, limits, process_noise, measurement_noise):
         """
-        Initialize the particle filter.
+        Initialize the abstract particle filter.
 
         :param number_of_particles: Number of particles
         :param limits: List with maximum and minimum values for x and y dimension: [xmin, xmax, ymin, ymax]
@@ -116,7 +116,6 @@ class ParticleFilter:
         Initialize the particle filter using the given set of particles.
 
         :param particles: Initial particle set: [[weight_1, [x1, y1, theta1]], ..., [weight_n, [xn, yn, thetan]]]
-        :return: Boolean indicating success
         """
 
         # Assumption: particle have correct format, set particles
@@ -210,19 +209,19 @@ class ParticleFilter:
         # Make sure we stay within cyclic world
         return self.validate_state(propagated_sample)
 
-    def compute_importance_weight(self, sample, measurement, landmarks):
+    def compute_likelihood(self, sample, measurement, landmarks):
         """
-        Compute the importance weight p(z|sample) for a specific measurement given sample state and landmarks.
+        Compute likelihood p(z|sample) for a specific measurement given sample state and landmarks.
 
         :param sample: Sample (unweighted particle) that must be propagated
         :param measurement: List with measurements, for each landmark [distance_to_landmark, angle_wrt_landmark], units
         are meters and radians
         :param landmarks: Positions (absolute) landmarks (in meters)
-        :return Importance weight
+        :return Likelihood
         """
 
         # Initialize measurement likelihood
-        measurement_likelihood_sample = 1.0
+        likelihood_sample = 1.0
 
         # Loop over all landmarks for current particle
         for i, lm in enumerate(landmarks):
@@ -244,10 +243,10 @@ class ParticleFilter:
                        (2 * self.measurement_noise[1] * self.measurement_noise[1]))
 
             # Incorporate likelihoods current landmark
-            measurement_likelihood_sample *= p_z_given_x_distance * p_z_given_x_angle
+            likelihood_sample *= p_z_given_x_distance * p_z_given_x_angle
 
         # Return importance weight based on all landmarks
-        return measurement_likelihood_sample
+        return likelihood_sample
 
     @abstractmethod
     def update(self, robot_forward_motion, robot_angular_motion, measurements, landmarks):

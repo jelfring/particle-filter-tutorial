@@ -1,5 +1,5 @@
 from .particle_filter_base import ParticleFilter
-from core.resampling import cumulative_sum, binary_search
+from core.resampling import naive_search, cumulative_sum
 
 import numpy as np
 
@@ -15,13 +15,13 @@ class AuxiliaryParticleFilter(ParticleFilter):
     @staticmethod
     def sample_multinomial_indices(samples):
         """
-        Particles are sampled with replacement proportional to their weight an in arbitrary order. This leads
-        to a maximum variance on the number of times a particle will be resampled, since any particle will be
-        resampled between 0 and N times.
+        Particles indices are sampled with replacement proportional to their weight an in arbitrary order. This leads
+        to a maximum variance on the number of times a particle will be resampled, since any particle will be resampled
+        between 0 and N times.
         Computational complexity: O(N log(M)
 
         :param samples: Samples that must be resampled.
-        :return: Resampled weighted particles.
+        :return: Resampled indices.
         """
 
         # Number of samples
@@ -40,8 +40,8 @@ class AuxiliaryParticleFilter(ParticleFilter):
             # Draw a random sample u
             u = np.random.uniform(1e-6, 1, 1)[0]
 
-            # Get first sample for which cumulative sum is above u using binary search (O(log M))
-            m = binary_search(Q, 0, len(Q) - 1, u)
+            # Get first sample for which cumulative sum is above u using naive search
+            m = naive_search(Q, u)
 
             # Store index
             new_indices.append(m)
@@ -75,9 +75,9 @@ class AuxiliaryParticleFilter(ParticleFilter):
             mu = self.propagate_sample(par[1], robot_forward_motion, robot_angular_motion)
 
             # Compute and store current particle's weight
-            meas_likelihood = self.compute_importance_weight(mu, measurements,  landmarks) * par[0]
-            weight = meas_likelihood * par[0]
-            tmp_likelihoods.append(meas_likelihood)
+            likelihood = self.compute_likelihood(mu, measurements, landmarks) * par[0]
+            weight = likelihood * par[0]
+            tmp_likelihoods.append(likelihood)
 
             # Store (notice mu will not be used later)
             tmp_particles.append([weight, mu])
@@ -102,7 +102,7 @@ class AuxiliaryParticleFilter(ParticleFilter):
             wi_tmp = tmp_likelihoods[idx]
             if wi_tmp < 1e-10:
                 wi_tmp = 1e-10  # avoid division by zero
-            weight = self.compute_importance_weight(propagated_state, measurements, landmarks) / wi_tmp
+            weight = self.compute_likelihood(propagated_state, measurements, landmarks) / wi_tmp
 
             # Store
             new_samples.append([weight, propagated_state])

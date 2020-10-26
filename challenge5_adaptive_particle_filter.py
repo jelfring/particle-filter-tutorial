@@ -3,10 +3,13 @@
 # Simulation + plotting requires a robot, visualizer and world
 from simulator import Robot, Visualizer, World
 
-# Supported resampling methods (resampling algorithm enum for SIR and SIR-derived particle filters)
+# Supported resampling methods (resampling algorithm enum for SIR)
 from core.resampling import ResamplingAlgorithms
 
-# Particle filters
+# Load variables
+from shared_simulation_settings import *
+
+# Particle filters that will be compared
 from core.particle_filters import AdaptiveParticleFilterKld, ParticleFilterSIR
 
 # For showing plots (plt.show())
@@ -16,36 +19,22 @@ import numpy as np
 import copy
 
 if __name__ == '__main__':
+    """
+    This file demonstrates the difference between the SIR particle filter that has a constant number of particles and
+    the adaptive particle filter that varies the number of particles on the fly. Afterwards, the number of particles
+    for both particle filters are plotted over time together with the estimation error of the robot's x-position. The
+    results show that the adaptive particle filter achieves a similar estimation accuracy with less particles once the
+    particles have converged.
+    """
 
     print("Starting adaptive particle filter demo.")
 
     ##
     # Set simulated world and visualization properties
     ##
-    world = World(10.0, 10.0, [[2.0, 2.0], [2.0, 8.0], [9.0, 2.0], [8, 9]])
-
-    # Initialize visualization
-    show_particle_pose = False  # only set to true for low #particles (very slow)
-    visualizer = Visualizer(show_particle_pose)
-
-    # Number of simulated time steps
-    n_time_steps = 50
-
-    ##
-    # True robot properties (simulator settings)
-    ##
-
-    # Setpoint (desired) motion robot
-    robot_setpoint_motion_forward = 0.25
-    robot_setpoint_motion_turn = 0.02
-
-    # True simulated robot motion is set point plus additive zero mean Gaussian noise with these standard deviation
-    true_robot_motion_forward_std = 0.005
-    true_robot_motion_turn_std = 0.002
-
-    # Robot measurements are corrupted by measurement noise
-    true_robot_meas_noise_distance_std = 0.2
-    true_robot_meas_noise_angle_std = 0.05
+    world = World(world_size_x, world_size_y, landmark_positions)
+    visualizer = Visualizer()
+    num_time_steps = 50
 
     # Initialize simulated robot
     robot = Robot(x=world.x_max * 0.75,
@@ -58,44 +47,50 @@ if __name__ == '__main__':
 
     ##
     # Particle filter settings
+    # The process and measurement model noise is not equal to true noise.
     ##
 
+    # Number of particles
     number_of_particles = 750
-    pf_state_limits = [0, world.x_max, 0, world.y_max]
 
-    # Process model noise (zero mean additive Gaussian noise)
+    # Initialize particle filter
+
+    # Set resampling algorithm used (where applicable)
+    resampling_algorithm = ResamplingAlgorithms.MULTINOMIAL
+
+    # Process model noise (values used in the paper)
     motion_model_forward_std = 0.20
     motion_model_turn_std = 0.05
     process_noise = [motion_model_forward_std, motion_model_turn_std]
 
-    # Measurement noise (zero mean additive Gaussian noise)
-    meas_model_distance_std = 0.4
-    meas_model_angle_std = 0.3
-    measurement_noise = [meas_model_distance_std, meas_model_angle_std]
-
-    # Set resampling algorithm used (where applicable)
-    algorithm = ResamplingAlgorithms.MULTINOMIAL
-
     # Initialize SIR particle filter
     particle_filter_sir = ParticleFilterSIR(
-        number_of_particles=number_of_particles,
-        limits=pf_state_limits,
-        process_noise=process_noise,
-        measurement_noise=measurement_noise,
-        resampling_algorithm=algorithm)
+        number_of_particles,
+        pf_state_limits,
+        process_noise,
+        measurement_noise,
+        resampling_algorithm)
     particle_filter_sir.initialize_particles_uniform()
 
-    # Initialize adaptive particle filter (KLD sampling)
+    # Adaptive particle filter specific settings (see AdaptiveParticleFilterKld constructor for more extensive
+    # documentation
+    resolutions_grid = [0.2, 0.2, 0.3]
+    epsilon = 0.15
+    upper_quantile = 3
+    min_number_of_particles = 50
+    max_number_of_particles = 2e4
+
+    # Initialize adaptive particle filter with the same set of particles
     adaptive_particle_filter_kld = AdaptiveParticleFilterKld(
-        number_of_particles=number_of_particles,
-        limits=pf_state_limits,
-        process_noise=process_noise,
-        measurement_noise=measurement_noise,
-        resolutions=[0.2, 0.2, 0.3],
-        epsilon=0.15,
-        upper_quantile=3,
-        min_number_particles=50,
-        max_number_particles=2e4)
+        number_of_particles,
+        pf_state_limits,
+        process_noise,
+        measurement_noise,
+        resolutions_grid,
+        epsilon,
+        upper_quantile,
+        min_number_of_particles,
+        max_number_of_particles)
     adaptive_particle_filter_kld.set_particles(copy.deepcopy(particle_filter_sir.particles))
 
     ##
@@ -105,7 +100,7 @@ if __name__ == '__main__':
     npar_kld = []
     errors_sir = []
     npar_sir = []
-    for i in range(n_time_steps):
+    for i in range(num_time_steps):
 
 
         # Simulate robot motion (required motion will not exactly be achieved)

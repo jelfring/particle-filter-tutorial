@@ -20,7 +20,7 @@ class ParticleFilterRangeOnly(ParticleFilter):
                  measurement_noise,
                  resampling_algorithm):
         """
-        Initialize the SIR particle filter.
+        Initialize the SIR range measurement only particle filter. Largely copied from the SIR particle filter.
 
         :param number_of_particles: Number of particles.
         :param limits: List with maximum and minimum values for x and y dimension: [xmin, xmax, ymin, ymax].
@@ -44,7 +44,7 @@ class ParticleFilterRangeOnly(ParticleFilter):
         """
         return True
 
-    def compute_importance_weight(self, sample, measurement, landmarks):
+    def compute_likelihood(self, sample, measurement, landmarks):
         """
         Compute the importance weight p(z|sample) for a specific measurement given sample state and landmarks.
 
@@ -94,7 +94,7 @@ class ParticleFilterRangeOnly(ParticleFilter):
             propagated_state = self.propagate_sample(par[1], robot_forward_motion, robot_angular_motion)
 
             # Compute current particle's weight
-            weight = par[0] * self.compute_importance_weight(propagated_state, measurements,  landmarks)
+            weight = par[0] * self.compute_likelihood(propagated_state, measurements, landmarks)
 
             # Store
             new_particles.append([weight, propagated_state])

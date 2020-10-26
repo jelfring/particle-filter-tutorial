@@ -17,22 +17,30 @@ def get_states(weighted_samples):
 
 
 if __name__ == '__main__':
+    """
+    In this program a particle set will be generated and different resampling algorithms will be used to resample (with 
+    replacement) from this particle set. The probability of selecting a particle is proportional to its weight.
+    
+    In the end the number of times each particle has been selected (this should be the same for all resampling 
+    algorithms) is printed. Furthermore, the standard deviations are shown (the variance in the number of times each 
+    particle has been selected. This is a measure of the predictability of the resampling algorithm. In other words, the
+    diversity in sample set when performing resampling multiple times on exactly the same particle set.
+    """
 
     print("Compare four resampling algorithms.")
 
     # Number of particles
     number_of_particles = 5
 
-    # Weights
-    # normalized_weights = number_of_particles * [1.0 / number_of_particles]
+    # Determine weights (random weights), normalize such that they sum up to one.
     unnormalized_weights = np.random.random_sample((number_of_particles,))
     normalized_weights = [w / np.sum(unnormalized_weights) for w in unnormalized_weights]
 
-    # States
+    # States range from 1 to the number of particles
     particle_states = range(1, number_of_particles+1)
 
     # Weighted samples
-    weighted_particles = zip(normalized_weights, particle_states)
+    weighted_particles = list(zip(normalized_weights, particle_states))
 
     # Resampling algorithms that must be compared
     resampler = Resampler()

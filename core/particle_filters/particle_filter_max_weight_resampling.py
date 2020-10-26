@@ -51,5 +51,4 @@ class ParticleFilterMWR(ParticleFilterSIR):
         for par in self.particles:
             max_weight = max(max_weight, par[0])
 
-        # print("Reciprocal of max_weight {} is {}".format(max_weight, 1.0 / max_weight))
         return 1.0 / max_weight < self.resampling_threshold
