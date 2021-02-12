@@ -91,8 +91,8 @@ class Visualizer:
         # Add particles
         if self.draw_particle_pose:
             # Warning: this is very slow for large numbers of particles
+            radius_scale_factor = len(particles) / 10.
             for p in particles:
-                radius_scale_factor = 10
                 self.add_pose2d(p[1][0], p[1][1], p[1][2], 1, particle_color, radius_scale_factor * p[0])
         else:
             # Convert to numpy array for efficiency reasons (drop weights)
@@ -128,5 +128,5 @@ class Visualizer:
         plt.gca().add_patch(circle)
 
         # Draw line indicating heading
-        plt.plot([x, x + self.robot_arrow_length * np.cos(theta)],
-                 [y, y + self.robot_arrow_length * np.sin(theta)], color)
+        plt.plot([x, x + radius * np.cos(theta)],
+                 [y, y + radius * np.sin(theta)], color)
