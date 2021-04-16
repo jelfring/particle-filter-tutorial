@@ -102,5 +102,5 @@ def compute_required_number_of_particles_kld(k, epsilon, upper_quantile):
     :return: Number of required particles.
     """
     # Helper variable (part between curly brackets in (7) in Fox paper
-    x = 1.0 - 2.0 / (9.0*(k-1)) + np.sqrt(2.0 / (9.0*(k-1)) * upper_quantile)
+    x = 1.0 - 2.0 / (9.0*(k-1)) + np.sqrt(2.0 / (9.0*(k-1))) * upper_quantile
     return np.ceil((k-1) / (2.0*epsilon) * x * x * x)
