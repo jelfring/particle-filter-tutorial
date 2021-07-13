@@ -75,7 +75,7 @@ class AuxiliaryParticleFilter(ParticleFilter):
             mu = self.propagate_sample(par[1], robot_forward_motion, robot_angular_motion)
 
             # Compute and store current particle's weight
-            likelihood = self.compute_likelihood(mu, measurements, landmarks) * par[0]
+            likelihood = self.compute_likelihood(mu, measurements, landmarks) 
             weight = likelihood * par[0]
             tmp_likelihoods.append(likelihood)
 
