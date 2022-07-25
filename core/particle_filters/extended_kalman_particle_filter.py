@@ -128,11 +128,12 @@ class KalmanParticleFilter(ParticleFilter):
             cov_ekf = F * cov_ekf * np.transpose(F) + self.Q
 
             # Process measurements one by one (EKF update step)
+            updated_state_ekf = propagated_state
             for idx, landmark in enumerate(landmarks):
 
                 # Compute expected measurement
-                dx = propagated_state[0] - landmark[0]
-                dy = propagated_state[1] - landmark[1]
+                dx = updated_state_ekf[0] - landmark[0]
+                dy = updated_state_ekf[1] - landmark[1]
                 z1_exp = np.sqrt((dx*dx + dy*dy))
                 z2_exp = np.arctan2(dy, dx)
 
@@ -152,28 +153,28 @@ class KalmanParticleFilter(ParticleFilter):
 
                 # Update state vector and covariance
                 delta_state = np.dot(K, y_tilde)
-                propagated_state[0] += delta_state[0][0]
-                propagated_state[1] += delta_state[1][0]
-                propagated_state[2] += delta_state[2][0]
-                self.validate_state(propagated_state)
+                updated_state_ekf[0] += delta_state[0][0]
+                updated_state_ekf[1] += delta_state[1][0]
+                updated_state_ekf[2] += delta_state[2][0]
+                self.validate_state(updated_state_ekf)
                 cov_ekf = np.dot((np.eye(3) - np.dot(K, H)), cov_ekf)
 
             # New particle state: sample from normal distribution EKF
-            updated_state = np.random.multivariate_normal(propagated_state, cov_ekf)
-            self.validate_state(updated_state)
+            updated_state_pf = np.random.multivariate_normal(updated_state_ekf, cov_ekf)
+            self.validate_state(updated_state_pf)
 
-            # Compute likelihood using propagated state
-            likelihood = self.compute_likelihood(propagated_state, measurements, landmarks)
+            # Compute likelihood using sampled particle state
+            likelihood = self.compute_likelihood(updated_state_pf, measurements, landmarks)
             # Compute prior (mean is zero vector by default)
-            prior = multivariate_normal.pdf(updated_state-propagated_state, cov=self.Q)
+            prior = multivariate_normal.pdf(updated_state_pf-propagated_state, cov=self.Q)
             # Importance density
-            importance_density = multivariate_normal.pdf(updated_state-propagated_state, cov=cov_ekf)
+            importance_density = multivariate_normal.pdf(updated_state_pf-updated_state_ekf, cov=cov_ekf)
             # Compute current particle's weight
             weight = likelihood * prior / importance_density
             sum_weights += weight
 
             # Store updated particle
-            new_particles.append([weight, propagated_state, cov_ekf])
+            new_particles.append([weight, updated_state_pf, cov_ekf])
 
         # Normalize particle weight
         if sum_weights < 1e-10:
