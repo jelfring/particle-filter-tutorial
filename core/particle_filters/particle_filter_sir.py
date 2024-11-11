@@ -71,3 +71,5 @@ class ParticleFilterSIR(ParticleFilter):
         # Resample if needed
         if self.needs_resampling():
             self.particles = self.resampler.resample(self.particles, self.n_particles, self.resampling_algorithm)
+            return True
+        return False
